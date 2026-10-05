@@ -61,12 +61,12 @@ class ProductController extends Controller
 
         try {
             $product->update([
-                'name' => $data['name'],
-                'price' => $data['price'],
-                'stock' => $data['stock'],
-                'is_available' => $data['is_available'],
-                'image_path' => $newImagePath ?? $oldImagePath,
-            ]);
+            'name' => $data['name'],
+            'price' => $data['price'],
+            'stock' => $data['stock'],
+            'availability' => $data['is_available'],
+            'product_picture' => $newImagePath ?? $oldImagePath,
+        ]);
         } catch (Throwable $exception) {
             $this->deletePicture($newImagePath);
             throw $exception;
