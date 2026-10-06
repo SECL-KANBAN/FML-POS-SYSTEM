@@ -398,17 +398,21 @@
                             </span>
                         </div>
 
-                        <button
-                            type="button"
-                            {{ $totalItems === 0 ? 'disabled' : '' }}
-                            class="mt-2 w-full rounded-md px-4 py-2.5 text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2
-                            {{ $totalItems === 0
-                                ? 'cursor-not-allowed bg-indigo-300 dark:bg-indigo-900 dark:text-gray-400'
-                                : 'bg-indigo-600 hover:bg-indigo-500 dark:focus:ring-offset-gray-800'
-                            }}"
-                        >
-                            Checkout
-                        </button>
+                        <form method="POST" action="{{ route('checkout.process') }}">
+                            @csrf
+
+                            <button
+                                type="submit"
+                                {{ $totalItems === 0 ? 'disabled' : '' }}
+                                class="mt-2 w-full rounded-md px-4 py-2.5 text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2
+                                {{ $totalItems === 0
+                                    ? 'cursor-not-allowed bg-indigo-300 dark:bg-indigo-900 dark:text-gray-400'
+                                    : 'bg-indigo-600 hover:bg-indigo-500 dark:focus:ring-offset-gray-800'
+                                }}"
+                            >
+                                Checkout
+                            </button>
+                        </form>
 
                     </div>
                 </section>
