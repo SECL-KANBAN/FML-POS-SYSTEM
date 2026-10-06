@@ -162,48 +162,256 @@
                                             </button>
                                         </form>
 
-                                        <button
-                                            type="button"
-                                            aria-label="Add {{ $product->name }} to cart"
-                                            title="Add to cart"
-                                            class="rounded-md p-2 text-gray-500 hover:bg-indigo-50 hover:text-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-gray-400 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-400"
-                                        >
-                                            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                                <path d="M1.5 2.75A.75.75 0 0 1 2.25 2h1.386a1.75 1.75 0 0 1 1.707 1.365L5.55 4.5h10.7a1.75 1.75 0 0 1 1.695 2.183l-1.2 4.8A1.75 1.75 0 0 1 15.05 12.8H7.1l.25 1.2h8.4a.75.75 0 0 1 0 1.5H6.74a.75.75 0 0 1-.735-.597L3.88 4.053a.25.25 0 0 0-.244-.195H2.25a.75.75 0 0 1-.75-.75ZM7.25 18a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5Zm7 0a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5Z" />
-                                            </svg>
-                                        </button>
-                                    </div>
+                                        <form method="POST" action="{{ route('cart.add', $product) }}">
+                                    @csrf
+
+                                    <button
+                                        type="submit"
+                                        aria-label="Add {{ $product->name }} to cart"
+                                        title="Add to cart"
+                                        class="rounded-md p-2 text-gray-500 hover:bg-indigo-50 hover:text-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-gray-400 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-400">
+                                        <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                            <path d="M1.5 2.75A.75.75 0 0 1 2.25 2h1.386a1.75 1.75 0 0 1 1.707 1.365L5.55 4.5h10.7a1.75 1.75 0 0 1 1.695 2.183l-1.2 4.8A1.75 1.75 0 0 1 15.05 12.8H7.1l.25 1.2h8.4a.75.75 0 0 1 0 1.5H6.74a.75.75 0 0 1-.735-.597L3.88 4.053a.25.25 0 0 0-.244-.195H2.25a.75.75 0 0 1-.75-.75ZM7.25 18a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5Zm7 0a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5Z" />
+                                        </svg>
+                                    </button>
+                                </form>
+                             </div>
                                 </article>
                             @endforeach
                         </div>
                     @endif
                 </section>
 
-                <section class="min-w-0 rounded-lg bg-white p-4 shadow-sm sm:p-6 dark:bg-gray-800" aria-labelledby="cart-heading">
-                    <div class="border-b border-gray-200 pb-4 dark:border-gray-700">
-                        <h3 id="cart-heading" class="text-lg font-semibold text-gray-900 dark:text-gray-100">Cart</h3>
-                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">0 items</p>
-                    </div>
+                @php
+    $cart = session('cart', []);
 
-                    <div class="flex min-h-48 items-center justify-center border-b border-gray-200 py-6 text-center dark:border-gray-700">
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Your cart is empty.</p>
-                    </div>
+    $cartItems = array_values($cart);
 
+    $totalItems = 0;
+    $subtotal = 0;
+
+    foreach ($cartItems as $item) {
+        $totalItems += $item['quantity'];
+        $subtotal += $item['price'] * $item['quantity'];
+    }
+@endphp
+
+<section
+    class="min-w-0 rounded-lg bg-white p-4 shadow-sm sm:p-6 dark:bg-gray-800"
+    aria-labelledby="cart-heading"
+>
+    <div class="border-b border-gray-200 pb-4 dark:border-gray-700">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3
+                    id="cart-heading"
+                    class="text-lg font-semibold text-gray-900 dark:text-gray-100"
+                >
+                    Cart
+                </h3>
+
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    {{ $totalItems }} {{ $totalItems === 1 ? 'item' : 'items' }}
+                </p>
+            </div>
+
+            @if ($totalItems > 0)
+                <span class="rounded-full bg-indigo-100 px-2.5 py-1 text-xs font-semibold text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
+                    {{ $totalItems }}
+                </span>
+            @endif
+        </div>
+    </div>
+
+    @if (count($cartItems) === 0)
+
+        <div class="flex min-h-48 items-center justify-center border-b border-gray-200 py-6 text-center dark:border-gray-700">
+            <div>
+                <svg
+                    class="mx-auto h-10 w-10 text-gray-300 dark:text-gray-600"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="1.5"
+                        d="M3 3h2l2.4 12.4a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 1.9-1.4L21 8H6"
+                    />
+                    <circle cx="10" cy="20" r="1" />
+                    <circle cx="18" cy="20" r="1" />
+                </svg>
+
+                <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">
+                    Your cart is empty.
+                </p>
+            </div>
+        </div>
+
+    @else
+
+        <div class="max-h-[400px] divide-y divide-gray-200 overflow-y-auto dark:divide-gray-700">
+
+            @foreach ($cartItems as $item)
+
+                <div class="flex gap-3 py-4">
+
+                    {{-- Product Image --}}
+                    @if ($item['image'])
+                        <img
+                            src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($item['image']) }}"
+                            alt="{{ $item['name'] }}"
+                            class="h-16 w-16 shrink-0 rounded-md object-cover"
+                        >
+                    @else
+                        <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-md bg-gray-100 dark:bg-gray-700">
+                            <svg
+                                class="h-7 w-7 text-gray-400"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="1.5"
+                                    d="m3 7 9-4 9 4v10l-9 4-9-4V7Zm0 0 9 4m9-4-9 4m0 0v10"
+                                />
+                            </svg>
+                        </div>
+                    @endif
+
+                    {{-- Product Information --}}
+                    <div class="min-w-0 flex-1">
+
+                        <div class="flex justify-between gap-2">
+
+                            <div class="min-w-0">
+                                <h4 class="truncate text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                    {{ $item['name'] }}
+                                </h4>
+
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                    {{ $item['sku'] }}
+                                </p>
+
+                                <p class="mt-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    ${{ number_format($item['price'], 2) }}
+                                </p>
+                            </div>
+
+                            {{-- Remove --}}
+                            <form
+                                method="POST"
+                                action="{{ route('cart.remove', $item['id']) }}"
+                            >
+                                @csrf
+
+                                <button
+                                    type="submit"
+                                    class="rounded-md p-1 text-gray-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400"
+                                    title="Remove"
+                                >
+                                    <svg
+                                        class="h-4 w-4"
+                                        viewBox="0 0 20 20"
+                                        fill="currentColor"
+                                    >
+                                        <path
+                                            d="M6 2.75A.75.75 0 0 1 6.75 2h6.5a.75.75 0 0 1 .75.75V4h2.25a.75.75 0 0 1 0 1.5h-.6l-.7 10.5A2.2 2.2 0 0 1 12.76 18H7.24a2.2 2.2 0 0 1-2.19-2L4.35 5.5h-.6A.75.75 0 0 1 3.75 4H6V2.75Z"
+                                        />
+                                    </svg>
+                                </button>
+                            </form>
+
+                        </div>
+
+                        {{-- Quantity --}}
+                        <div class="mt-3 flex items-center justify-between">
+
+                            <div class="flex items-center rounded-md border border-gray-300 dark:border-gray-600">
+
+                                <form
+                                    method="POST"
+                                    action="{{ route('cart.decrease', $item['id']) }}"
+                                >
+                                    @csrf
+
+                                    <button
+                                        type="submit"
+                                        class="px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                                    >
+                                        −
+                                    </button>
+                                </form>
+
+                                <span class="px-3 py-1 text-sm font-medium text-gray-800 dark:text-gray-200">
+                                    {{ $item['quantity'] }}
+                                </span>
+
+                                <form
+                                    method="POST"
+                                    action="{{ route('cart.add', $item['id']) }}" >
+                                    @csrf
+
+                                    <button
+                                        type="submit"
+                                        class="px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
+                                        +
+                                    </button>
+                                </form>
+
+                            </div>
+
+                            <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                ${{ number_format($item['price'] * $item['quantity'], 2) }}
+                            </span>
+
+                        </div>
+
+                    </div>
+                </div>
+
+            @endforeach
+
+        </div>
+
+        @endif
+
+                    {{-- Totals --}}
                     <div class="space-y-3 pt-4">
+
                         <div class="flex justify-between text-sm text-gray-600 dark:text-gray-300">
                             <span>Subtotal</span>
-                            <span>$0.00</span>
+
+                            <span>
+                                ${{ number_format($subtotal, 2) }}
+                            </span>
                         </div>
+
                         <div class="flex justify-between border-t border-gray-200 pt-3 font-semibold text-gray-900 dark:border-gray-700 dark:text-gray-100">
                             <span>Total</span>
-                            <span>$0.00</span>
+
+                            <span>
+                                ${{ number_format($subtotal, 2) }}
+                            </span>
                         </div>
-                        <button type="button" disabled class="mt-2 w-full cursor-not-allowed rounded-md bg-indigo-300 px-4 py-2.5 text-sm font-semibold text-white dark:bg-indigo-900 dark:text-gray-400">
+
+                        <button
+                            type="button"
+                            {{ $totalItems === 0 ? 'disabled' : '' }}
+                            class="mt-2 w-full rounded-md px-4 py-2.5 text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2
+                            {{ $totalItems === 0
+                                ? 'cursor-not-allowed bg-indigo-300 dark:bg-indigo-900 dark:text-gray-400'
+                                : 'bg-indigo-600 hover:bg-indigo-500 dark:focus:ring-offset-gray-800'
+                            }}"
+                        >
                             Checkout
                         </button>
+
                     </div>
                 </section>
-
                 <div
                     x-show="modalOpen"
                     x-transition.opacity
