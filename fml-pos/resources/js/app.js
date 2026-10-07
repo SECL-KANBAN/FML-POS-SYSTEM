@@ -106,11 +106,11 @@ Alpine.data('barcodeScanner', () => ({
             }
             this.controls = controls;
             this.scanState = 'scanning';
-            this.scanStatus = 'Camera is active. Point it at a product barcode.';
+            this.scanStatus = 'Camera is active. Point it at a product QR code.';
             this.noBarcodeTimer = window.setTimeout(() => {
                 if (this.scanState === 'scanning') {
                     this.scanState = 'not-found';
-                    this.scanStatus = 'No barcode detected yet. Adjust the camera and keep the barcode in view.';
+                    this.scanStatus = 'No QR code detected yet. Adjust the camera and keep the barcode in view.';
                 }
             }, 4000);
         } catch (error) {
