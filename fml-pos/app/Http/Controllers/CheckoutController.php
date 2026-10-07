@@ -9,93 +9,116 @@ use Illuminate\Support\Facades\DB;
 
 class CheckoutController extends Controller
 {
-    public function process(Request $request)
-    {
-        $cart = session('cart', []);
+  public function process(Request $request)
+{
+    $request->validate([
+        'payment_method' => 'required|in:cash,card,gcash,maya,bank_transfer',
+        'amount_paid' => 'required|numeric|min:0',
+    ]);
 
-        if (empty($cart)) {
-            return redirect()->route('dashboard')
-                ->with('status', 'Your cart is empty.');
-        }
+    $cart = session('cart', []);
 
-        DB::beginTransaction();
-
-        try {
-            $total = 0;
-            $items = [];
-
-            foreach ($cart as $item) {
-
-                $product = Product::lockForUpdate()->find($item['id']);
-
-                if (!$product) {
-                    throw new \Exception(
-                        "Product {$item['name']} no longer exists."
-                    );
-                }
-
-                if ($product->stock < $item['quantity']) {
-                    throw new \Exception(
-                        "Not enough stock for {$product->name}."
-                    );
-                }
-
-                // Calculate item total
-                $itemTotal = $product->price * $item['quantity'];
-                $total += $itemTotal;
-
-                $items[] = [
-                    'name' => $product->name,
-                    'sku' => $product->sku,
-                    'price' => $product->price,
-                    'quantity' => $item['quantity'],
-                    'total' => $itemTotal,
-                ];
-
-                // DECREASE STOCK
-                $product->decrement('stock', $item['quantity']);
-
-                // Automatically unavailable when stock reaches 0
-                if ($product->stock <= 0) {
-                    $product->update([
-                        'is_available' => false
-                    ]);
-                }
-            }
-
-            DB::commit();
-
-            // Create receipt data
-            $receipt = [
-                'receipt_number' => 'REC-' . strtoupper(
-                    now()->format('YmdHis')
-                ),
-                'date' => now()->format('F d, Y h:i A'),
-                'items' => $items,
-                'total' => $total,
-            ];
-
-            // Save receipt temporarily in session
-            session([
-                'last_receipt' => $receipt
-            ]);
-
-            // Clear cart AFTER successful checkout
-            session()->forget('cart');
-
-            return redirect()->route('checkout.receipt', [
-                'receipt' => $receipt['receipt_number']
-            ]);
-
-        } catch (\Throwable $e) {
-
-            DB::rollBack();
-
-            return redirect()->route('dashboard')
-                ->with('status', $e->getMessage());
-        }
+    if (empty($cart)) {
+        return redirect()->route('dashboard')
+            ->with('status', 'Your cart is empty.');
     }
 
+    DB::beginTransaction();
+
+    try {
+        $total = 0;
+        $items = [];
+
+        foreach ($cart as $item) {
+
+            $product = Product::lockForUpdate()->find($item['id']);
+
+            if (!$product) {
+                throw new \Exception(
+                    "Product {$item['name']} no longer exists."
+                );
+            }
+
+            if ($product->stock < $item['quantity']) {
+                throw new \Exception(
+                    "Not enough stock for {$product->name}."
+                );
+            }
+
+            // Calculate item total
+            $itemTotal = $product->price * $item['quantity'];
+            $total += $itemTotal;
+
+            $items[] = [
+                'name' => $product->name,
+                'sku' => $product->sku,
+                'price' => $product->price,
+                'quantity' => $item['quantity'],
+                'total' => $itemTotal,
+            ];
+
+            // DECREASE STOCK
+            $product->decrement('stock', $item['quantity']);
+
+            // Automatically unavailable when stock reaches 0
+            if ($product->stock <= 0) {
+                $product->update([
+                    'is_available' => false
+                ]);
+            }
+        }
+
+        // Payment information
+        $paymentMethod = $request->payment_method;
+        $amountPaid = (float) $request->amount_paid;
+
+        // Check if payment is enough
+        if ($amountPaid < $total) {
+            throw new \Exception(
+                'Insufficient payment. Please enter an amount equal to or greater than the total.'
+            );
+        }
+
+        // Calculate change
+        $change = $amountPaid - $total;
+
+        DB::commit();
+
+        // Create receipt data
+        $receipt = [
+            'receipt_number' => 'REC-' . strtoupper(
+                now()->format('YmdHis')
+            ),
+            'date' => now()->format('F d, Y h:i A'),
+            'items' => $items,
+            'total' => $total,
+
+            // Payment information
+            'payment_method' => $paymentMethod,
+            'amount_paid' => $amountPaid,
+            'change' => $change,
+        ];
+
+        // Save receipt temporarily in session
+        session([
+            'last_receipt' => $receipt
+        ]);
+
+        // Clear cart AFTER successful checkout
+        session()->forget('cart');
+
+        return redirect()->route('checkout.receipt', [
+            'receipt' => $receipt['receipt_number']
+        ]);
+
+    } catch (\Throwable $e) {
+
+        DB::rollBack();
+
+        return redirect()->route('dashboard')
+            ->with('status', $e->getMessage());
+    }
+}
 
     public function receipt($receipt)
     {

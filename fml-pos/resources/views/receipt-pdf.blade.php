@@ -124,9 +124,30 @@
 
 
     <div class="total">
-        Total:
-        ${{ number_format($data['total'], 2) }}
-    </div>
+    Total:
+    ${{ number_format($data['total'], 2) }}
+        </div>
+
+        <div style="margin-top: 15px; text-align: right; font-size: 13px;">
+
+            <div>
+                Payment Method:
+                <strong>
+                    {{ ucfirst(str_replace('_', ' ', $data['payment_method'])) }}
+                </strong>
+            </div>
+
+            <div style="margin-top: 5px;">
+                Amount Paid:
+                ${{ number_format($data['amount_paid'], 2) }}
+            </div>
+
+            <div style="margin-top: 5px; font-weight: bold;">
+                Change:
+                ${{ number_format($data['change'], 2) }}
+            </div>
+
+        </div>
 
 
     <div class="footer">
