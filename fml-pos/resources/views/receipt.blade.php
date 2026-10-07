@@ -56,7 +56,7 @@
                                 </span>
 
                                 <span>
-                                    ${{ number_format($item['total'], 2) }}
+                                    ₱{{ number_format($item['total'], 2) }}
                                 </span>
 
                             </div>
@@ -73,11 +73,11 @@
 
                                 <span>
                                     {{ $item['quantity'] }} x
-                                    ${{ number_format($item['price'], 2) }}
+                                    ₱{{ number_format($item['price'], 2) }}
                                 </span>
 
                                 <span>
-                                    ${{ number_format($item['total'], 2) }}
+                                    ₱{{ number_format($item['total'], 2) }}
                                 </span>
 
                             </div>
@@ -99,7 +99,7 @@
                         TOTAL
                     </span>
                     <span>
-                        ${{ number_format($data['total'], 2) }}
+                        ₱{{ number_format($data['total'], 2) }}
                     </span>
                 </div>
 
@@ -116,14 +116,14 @@
                     <div class="flex justify-between">
                         <span>Amount Paid</span>
                         <span>
-                            ${{ number_format($data['amount_paid'], 2) }}
+                            ₱{{ number_format($data['amount_paid'], 2) }}
                         </span>
                     </div>
 
                     <div class="flex justify-between font-bold">
                         <span>Change</span>
                         <span>
-                            ${{ number_format($data['change'], 2) }}
+                            ₱{{ number_format($data['change'], 2) }}
                         </span>
                     </div>
 

@@ -52,9 +52,9 @@ test('successful checkout is saved and shown in transaction history', function (
         ->assertSee('Coffee')
         ->assertSee('SKU-000001')
         ->assertSee('Cash')
-        ->assertSee('$9.00')
-        ->assertSee('$10.00')
-        ->assertSee('$1.00')
+        ->assertSee('₱9.00')
+        ->assertSee('₱10.00')
+        ->assertSee('₱1.00')
         ->assertSee('Completed');
 });
 
