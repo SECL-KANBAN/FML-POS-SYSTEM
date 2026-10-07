@@ -35,6 +35,13 @@
                     productId: @js(old('product_id')),
                     name: @js(old('name', '')),
                     sku: @js(old('sku', '')),
+                    productSearch: '',
+                    productAvailability: 'all',
+                    productItems: @js($products->map(fn ($product) => [
+                        'name' => (string) $product->name,
+                        'sku' => (string) $product->sku,
+                        'isAvailable' => (bool) $product->is_available,
+                    ])->values()),
                     price: @js(old('price', '')),
                     stock: @js(old('stock', '')),
                     isAvailable: @js((string) old('is_available', '1')),
@@ -71,27 +78,58 @@
                         if (file) {
                             this.previewUrl = URL.createObjectURL(file);
                         }
+                    },
+                    matchesProduct(name, sku, isAvailable) {
+                        const query = this.productSearch.trim().toLowerCase();
+                        const matchesSearch = !query || name.toLowerCase().includes(query) || sku.toLowerCase().includes(query);
+                        const matchesAvailability = this.productAvailability === 'all' || isAvailable;
+
+                        return matchesSearch && matchesAvailability;
+                    },
+                    hasMatchingProducts() {
+                        return this.productItems.some(product =>
+                            this.matchesProduct(product.name, product.sku, product.isAvailable)
+                        );
                     }
                 }"
                 @keydown.escape.window="modalOpen = false"
             >
                 {{-- ===================== PRODUCTS ===================== --}}
                 <section class="min-w-0 rounded-lg bg-white p-4 shadow-sm sm:p-6 dark:bg-gray-800" aria-labelledby="products-heading">
-                    <div class="mb-6 flex items-center justify-between gap-4">
+                    <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
                         <div>
                             <h3 id="products-heading" class="text-lg font-semibold text-gray-900 dark:text-gray-100">Products</h3>
-                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Browse available products</p>
+                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Search and filter products</p>
                         </div>
-                        <button
-                            type="button"
-                            @click="openCreate()"
-                            class="inline-flex shrink-0 items-center gap-2 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
-                        >
-                            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path d="M10 4a.75.75 0 0 1 .75.75v4.5h4.5a.75.75 0 0 1 0 1.5h-4.5v4.5a.75.75 0 0 1-1.5 0v-4.5h-4.5a.75.75 0 0 1 0-1.5h4.5v-4.5A.75.75 0 0 1 10 4Z" />
-                            </svg>
-                            Add Product
-                        </button>
+                        <div class="flex flex-wrap items-center justify-end gap-2">
+                            <label for="product-search" class="sr-only">Search products by name or SKU</label>
+                            <input
+                                id="product-search"
+                                type="search"
+                                x-model="productSearch"
+                                placeholder="Search name or SKU"
+                                class="w-48 rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                            >
+                            <label for="product-availability" class="sr-only">Filter products by availability</label>
+                            <select
+                                id="product-availability"
+                                x-model="productAvailability"
+                                class="rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                            >
+                                <option value="all">All products</option>
+                                <option value="available">Available only</option>
+                            </select>
+                            <button
+                                type="button"
+                                @click="openCreate()"
+                                class="inline-flex shrink-0 items-center gap-2 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+                            >
+                                <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                    <path d="M10 4a.75.75 0 0 1 .75.75v4.5h4.5a.75.75 0 0 1 0 1.5h-4.5v4.5a.75.75 0 0 1-1.5 0v-4.5h-4.5a.75.75 0 0 1 0-1.5h4.5v-4.5A.75.75 0 0 1 10 4Z" />
+                                </svg>
+                                Add Product
+                            </button>
+                        </div>
                     </div>
 
                     @if ($products->isEmpty())
@@ -104,7 +142,13 @@
                     @else
                         <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
                             @foreach ($products as $product)
-                                <article class="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
+                                <article
+                                    x-show="matchesProduct($el.dataset.name, $el.dataset.sku, $el.dataset.available === '1')"
+                                    data-name="{{ $product->name }}"
+                                    data-sku="{{ $product->sku }}"
+                                    data-available="{{ $product->is_available ? '1' : '0' }}"
+                                    class="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700"
+                                >
                                     <div class="flex gap-3 p-3">
                                         @if ($product->image_path)
                                             <img
@@ -195,6 +239,14 @@
                                     </div>
                                 </article>
                             @endforeach
+                        </div>
+                        <div
+                            x-cloak
+                            x-show="!hasMatchingProducts()"
+                            style="display: none"
+                            class="mt-4 rounded-lg border border-gray-200 px-4 py-8 text-center dark:border-gray-700"
+                        >
+                            <p class="text-sm font-medium text-gray-700 dark:text-gray-300">No products match your search or filter.</p>
                         </div>
                     @endif
                 </section>
