@@ -7,7 +7,7 @@
 
     <style>
         body {
-            font-family: DejaVu Sans, sans-serif;
+            font-family: Courier, monospace;    
             font-size: 12px;
             color: #222;
         }
@@ -22,6 +22,7 @@
         }
 
         table {
+            font-family: Courier, monospace;
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;

@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\Transaction;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class CheckoutController extends Controller
 {
@@ -23,88 +25,97 @@ class CheckoutController extends Controller
             ->with('status', 'Your cart is empty.');
     }
 
-    DB::beginTransaction();
-
     try {
-        $total = 0;
-        $items = [];
+        $receipt = DB::transaction(function () use ($request, $cart): array {
+            $total = 0;
+            $items = [];
+            $products = [];
 
-        foreach ($cart as $item) {
+            foreach ($cart as $item) {
+                $product = Product::lockForUpdate()->find($item['id']);
 
-            $product = Product::lockForUpdate()->find($item['id']);
+                if (!$product) {
+                    throw new \Exception(
+                        "Product {$item['name']} no longer exists."
+                    );
+                }
 
-            if (!$product) {
+                if ($product->stock < $item['quantity']) {
+                    throw new \Exception(
+                        "Not enough stock for {$product->name}."
+                    );
+                }
+
+                $itemTotal = $product->price * $item['quantity'];
+                $total += $itemTotal;
+
+                $items[] = [
+                    'name' => $product->name,
+                    'sku' => $product->sku,
+                    'price' => $product->price,
+                    'quantity' => $item['quantity'],
+                    'total' => $itemTotal,
+                ];
+                $products[] = $product;
+
+                $product->decrement('stock', $item['quantity']);
+
+                if ($product->stock <= 0) {
+                    $product->update([
+                        'is_available' => false
+                    ]);
+                }
+            }
+
+            $paymentMethod = $request->payment_method;
+            $amountPaid = (float) $request->amount_paid;
+
+            if ($amountPaid < $total) {
                 throw new \Exception(
-                    "Product {$item['name']} no longer exists."
+                    'Insufficient payment. Please enter an amount equal to or greater than the total.'
                 );
             }
 
-            if ($product->stock < $item['quantity']) {
-                throw new \Exception(
-                    "Not enough stock for {$product->name}."
-                );
-            }
+            $change = $amountPaid - $total;
+            $completedAt = now();
+            $receiptNumber = 'REC-'.$completedAt->format('YmdHis').'-'.Str::upper(Str::random(6));
 
-            // Calculate item total
-            $itemTotal = $product->price * $item['quantity'];
-            $total += $itemTotal;
+            $transaction = Transaction::create([
+                'receipt_number' => $receiptNumber,
+                'user_id' => $request->user()->id,
+                'payment_method' => $paymentMethod,
+                'total' => $total,
+                'amount_paid' => $amountPaid,
+                'change' => $change,
+                'completed_at' => $completedAt,
+            ]);
 
-            $items[] = [
-                'name' => $product->name,
-                'sku' => $product->sku,
-                'price' => $product->price,
-                'quantity' => $item['quantity'],
-                'total' => $itemTotal,
-            ];
-
-            // DECREASE STOCK
-            $product->decrement('stock', $item['quantity']);
-
-            // Automatically unavailable when stock reaches 0
-            if ($product->stock <= 0) {
-                $product->update([
-                    'is_available' => false
+            foreach ($items as $index => $item) {
+                $transaction->items()->create([
+                    'product_id' => $products[$index]->id,
+                    'name' => $item['name'],
+                    'sku' => $item['sku'],
+                    'price' => $item['price'],
+                    'quantity' => $item['quantity'],
+                    'total' => $item['total'],
                 ]);
             }
-        }
 
-        // Payment information
-        $paymentMethod = $request->payment_method;
-        $amountPaid = (float) $request->amount_paid;
+            return [
+                'receipt_number' => $receiptNumber,
+                'date' => $completedAt->format('F d, Y h:i A'),
+                'items' => $items,
+                'total' => $total,
+                'payment_method' => $paymentMethod,
+                'amount_paid' => $amountPaid,
+                'change' => $change,
+            ];
+        });
 
-        // Check if payment is enough
-        if ($amountPaid < $total) {
-            throw new \Exception(
-                'Insufficient payment. Please enter an amount equal to or greater than the total.'
-            );
-        }
-
-        // Calculate change
-        $change = $amountPaid - $total;
-
-        DB::commit();
-
-        // Create receipt data
-        $receipt = [
-            'receipt_number' => 'REC-' . strtoupper(
-                now()->format('YmdHis')
-            ),
-            'date' => now()->format('F d, Y h:i A'),
-            'items' => $items,
-            'total' => $total,
-
-            // Payment information
-            'payment_method' => $paymentMethod,
-            'amount_paid' => $amountPaid,
-            'change' => $change,
-        ];
-
-        // Save receipt temporarily in session
         session([
             'last_receipt' => $receipt
         ]);
 
-        // Clear cart AFTER successful checkout
         session()->forget('cart');
 
         return redirect()->route('checkout.receipt', [
@@ -112,9 +123,6 @@ class CheckoutController extends Controller
         ]);
 
     } catch (\Throwable $e) {
-
-        DB::rollBack();
-
         return redirect()->route('dashboard')
             ->with('status', $e->getMessage());
     }
