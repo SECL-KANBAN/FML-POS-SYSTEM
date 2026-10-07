@@ -9,7 +9,8 @@
         body {
             font-family: Courier, monospace;    
             font-size: 12px;
-            color: #222;
+            color: #f5f3f7;
+            background: #08070b;
         }
 
         .header {
@@ -30,7 +31,7 @@
 
         th,
         td {
-            border-bottom: 1px solid #ddd;
+            border-bottom: 1px solid #37323d;
             padding: 8px;
         }
 
@@ -51,13 +52,14 @@
             text-align: right;
             font-size: 16px;
             font-weight: bold;
+            color: #c084fc;
         }
 
         .footer {
             margin-top: 30px;
             text-align: center;
             font-size: 10px;
-            color: #777;
+            color: #a6a1ad;
         }
     </style>
 </head>

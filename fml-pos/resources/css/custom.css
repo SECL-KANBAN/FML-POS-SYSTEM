@@ -1,1 +1,153 @@
-/* Add your custom styles below. */
+/* Match the app's shared near-black and purple palette without changing layout. */
+[class~="bg-gray-100"],
+[class~="bg-gray-900"],
+[class~="dark:bg-gray-900"] {
+    background-color: #08070b !important;
+}
+
+[class~="bg-gray-900/60"] {
+    background-color: rgb(8 7 11 / 60%) !important;
+}
+
+[class~="bg-white"],
+[class~="dark:bg-gray-800"] {
+    background-color: #111014 !important;
+}
+
+[class~="bg-gray-50"],
+[class~="bg-gray-200"],
+[class~="bg-gray-300"],
+[class~="bg-gray-700"],
+[class~="bg-gray-800"],
+[class~="dark:bg-gray-700"],
+[class~="dark:bg-gray-600"],
+[class~="dark:bg-gray-200"],
+[class~="dark:bg-gray-900/50"] {
+    background-color: #17121d !important;
+}
+
+[class*="hover:bg-gray-"]:hover,
+[class*="focus:bg-gray-"]:focus {
+    background-color: #211a29 !important;
+}
+
+[class~="text-gray-900"],
+[class~="text-gray-800"],
+[class~="dark:text-gray-100"],
+[class~="dark:text-gray-200"],
+[class~="dark:text-gray-800"] {
+    color: #f5f3f7 !important;
+}
+
+[class~="text-gray-700"],
+[class~="text-gray-600"],
+[class~="dark:text-gray-600"],
+[class~="dark:text-gray-300"] {
+    color: #c8c2cf !important;
+}
+
+[class~="text-gray-500"],
+[class~="text-gray-400"],
+[class~="dark:text-gray-400"] {
+    color: #a6a1ad !important;
+}
+
+[class~="text-gray-300"],
+[class~="dark:text-gray-500"] {
+    color: #77717f !important;
+}
+
+[class*="border-gray-"],
+[class*="dark:border-gray-"] {
+    border-color: #37323d !important;
+}
+
+[class~="bg-indigo-50"],
+[class~="bg-indigo-100"],
+[class~="bg-indigo-300"],
+[class~="dark:bg-indigo-900/30"],
+[class~="dark:bg-indigo-900/40"],
+[class~="dark:bg-indigo-900/50"],
+[class~="dark:bg-indigo-900"],
+[class~="bg-blue-50"],
+[class~="dark:bg-blue-900/30"],
+[class~="bg-green-50"],
+[class~="bg-green-100"],
+[class~="dark:bg-green-900/30"],
+[class~="dark:bg-green-900/40"],
+[class~="bg-red-50"],
+[class~="bg-red-100"],
+[class~="dark:bg-red-900/30"],
+[class~="dark:bg-red-900/40"],
+[class~="bg-amber-50"],
+[class~="dark:bg-amber-900/30"],
+[class~="bg-yellow-100"] {
+    background-color: #2a1537 !important;
+}
+
+[class*="text-indigo-"],
+[class*="text-blue-"],
+[class*="text-green-"],
+[class*="text-red-"],
+[class*="text-amber-"],
+[class*="text-yellow-"] {
+    color: #d8b4fe !important;
+}
+
+[class~="bg-indigo-600"],
+[class~="bg-indigo-700"],
+[class~="dark:bg-indigo-600"],
+[class~="bg-red-600"],
+[class~="bg-red-700"] {
+    background-color: #9333ea !important;
+}
+
+[class~="hover:bg-indigo-500"]:hover,
+[class~="hover:bg-indigo-600"]:hover,
+[class~="hover:bg-red-500"]:hover {
+    background-color: #a855f7 !important;
+}
+
+[class*="hover:bg-indigo-"]:hover,
+[class*="hover:bg-red-"]:hover {
+    background-color: #a855f7 !important;
+}
+
+[class~="hover:text-indigo-600"]:hover,
+[class~="hover:text-indigo-500"]:hover,
+[class~="dark:hover:text-indigo-400"]:hover,
+[class*="hover:text-gray-"]:hover,
+[class*="hover:text-red-"]:hover,
+[class*="hover:text-indigo-"]:hover {
+    color: #c084fc !important;
+}
+
+[class~="border-indigo-500"],
+[class~="border-indigo-400"],
+[class~="dark:border-indigo-600"],
+[class~="focus:border-indigo-500"]:focus,
+[class~="dark:focus:border-indigo-600"]:focus,
+[class*="focus:border-indigo-"]:focus,
+[class*="focus:border-gray-"]:focus,
+[class*="hover:border-gray-"]:hover {
+    border-color: #a855f7 !important;
+}
+
+[class~="focus:ring-indigo-500"]:focus,
+[class~="dark:focus:ring-indigo-600"]:focus,
+[class*="focus:ring-red-"]:focus {
+    --tw-ring-color: #c084fc !important;
+}
+
+@media print {
+    .receipt-paper,
+    .receipt-paper [class~="bg-white"] {
+        background-color: #fff !important;
+        color: #000 !important;
+    }
+
+    .receipt-paper [class~="text-black"],
+    .receipt-paper [class~="text-gray-600"] {
+        color: #000 !important;
+    }
+}
