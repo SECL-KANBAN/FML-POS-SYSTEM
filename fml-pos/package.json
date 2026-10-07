@@ -19,5 +19,9 @@
     },
     "optionalDependencies": {
         "@laravel/multiplex": "^0.4.1"
+    },
+    "dependencies": {
+        "@zxing/browser": "^0.2.1",
+        "bwip-js": "^4.11.4"
     }
 }

@@ -32,6 +32,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/cart/add/{product}', [CartController::class, 'add'])
         ->name('cart.add');
 
+    Route::post('/cart/scan', [CartController::class, 'scan'])
+        ->name('cart.scan');
+
     Route::post('/cart/decrease/{product}', [CartController::class, 'decrease'])
         ->name('cart.decrease');
 

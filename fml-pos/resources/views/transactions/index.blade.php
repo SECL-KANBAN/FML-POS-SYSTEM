@@ -62,22 +62,22 @@
                                                         <span class="text-xs text-gray-500 dark:text-gray-400">({{ $item->sku }})</span>
                                                     @endif
                                                     <span class="whitespace-nowrap text-xs text-gray-500 dark:text-gray-400">
-                                                        {{ $item->quantity }} × ${{ number_format((float) $item->price, 2) }}
+                                                        {{ $item->quantity }} × ₱{{ number_format((float) $item->price, 2) }}
                                                     </span>
                                                 </li>
                                             @endforeach
                                         </ul>
                                     </td>
                                     <td class="whitespace-nowrap px-4 py-4 text-right text-sm font-semibold text-gray-900 sm:px-6 dark:text-gray-100">
-                                        ${{ number_format((float) $transaction->total, 2) }}
+                                        ₱{{ number_format((float) $transaction->total, 2) }}
                                     </td>
                                     <td class="whitespace-nowrap px-4 py-4 text-sm text-gray-600 sm:px-6 dark:text-gray-300">
                                         {{ ucfirst(str_replace('_', ' ', $transaction->payment_method)) }}
                                     </td>
                                     <td class="whitespace-nowrap px-4 py-4 text-right text-sm text-gray-600 sm:px-6 dark:text-gray-300">
-                                        <div>${{ number_format((float) $transaction->amount_paid, 2) }}</div>
+                                        <div>₱{{ number_format((float) $transaction->amount_paid, 2) }}</div>
                                         <div class="text-xs text-gray-500 dark:text-gray-400">
-                                            {{ __('Change') }}: ${{ number_format((float) $transaction->change, 2) }}
+                                            {{ __('Change') }}: ₱{{ number_format((float) $transaction->change, 2) }}
                                         </div>
                                     </td>
                                     <td class="whitespace-nowrap px-4 py-4 text-sm sm:px-6">

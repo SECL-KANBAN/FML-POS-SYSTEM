@@ -35,6 +35,8 @@
                     productId: @js(old('product_id')),
                     name: @js(old('name', '')),
                     sku: @js(old('sku', '')),
+                    barcodeValue: '',
+                    dataMatrixError: '',
                     productSearch: '',
                     productAvailability: 'all',
                     productItems: @js($products->map(fn ($product) => [
@@ -53,6 +55,8 @@
                         this.productId = '';
                         this.name = '';
                         this.sku = '';
+                        this.barcodeValue = '';
+                        this.dataMatrixError = '';
                         this.price = '';
                         this.stock = '';
                         this.isAvailable = '1';
@@ -66,12 +70,27 @@
                         this.productId = product.id;
                         this.name = product.name;
                         this.sku = product.sku;
+                        this.barcodeValue = product.sku || `PID-${product.id}`;
+                        this.dataMatrixError = '';
                         this.price = product.price;
                         this.stock = product.stock;
                         this.isAvailable = product.isAvailable ? '1' : '0';
                         this.previewUrl = null;
                         this.editImageUrl = product.imageUrl;
                         this.modalOpen = true;
+                    },
+                    async renderDataMatrix(canvas, value) {
+                        this.dataMatrixError = '';
+
+                        try {
+                            if (this.modalOpen && this.editing && this.barcodeValue === value) {
+                                await window.renderProductDataMatrix(canvas, value);
+                            }
+                        } catch (error) {
+                            this.dataMatrixError = error instanceof Error
+                                ? `Could not generate the Data Matrix code: ${error.message}`
+                                : 'Could not generate the Data Matrix code.';
+                        }
                     },
                     previewPicture(event) {
                         const file = event.target.files[0];
@@ -177,7 +196,7 @@
                                             </div>
                                             <p class="mt-1 truncate text-xs text-gray-500 dark:text-gray-400">{{ $product->sku }}</p>
                                             <div class="mt-2 flex items-center justify-between gap-2">
-                                                <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">${{ number_format((float) $product->price, 2) }}</span>
+                                                <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">₱{{ number_format((float) $product->price, 2) }}</span>
                                                 <span class="text-xs text-gray-500 dark:text-gray-400">Stock: {{ $product->stock }}</span>
                                             </div>
                                         </div>
@@ -252,21 +271,92 @@
                 </section>
 
                 {{-- ===================== CART ===================== --}}
-                <section class="min-w-0 rounded-lg bg-white p-4 shadow-sm sm:p-6 dark:bg-gray-800" aria-labelledby="cart-heading">
-                    <div class="border-b border-gray-200 pb-4 dark:border-gray-700">
+                <section
+                    x-data="cartState(@js($cartItems))"
+                    class="min-w-0 rounded-lg bg-white p-4 shadow-sm sm:p-6 dark:bg-gray-800"
+                    aria-labelledby="cart-heading"
+                >
+                    <div x-data="barcodeScanner" class="border-b border-gray-200 pb-4 dark:border-gray-700">
                         <div class="flex items-center justify-between">
                             <div>
                                 <h3 id="cart-heading" class="text-lg font-semibold text-gray-900 dark:text-gray-100">Cart</h3>
                                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                    {{ $totalItems }} {{ $totalItems === 1 ? 'item' : 'items' }}
+                                    <span x-text="`${totalItems} ${totalItems === 1 ? 'item' : 'items'}`">{{ $totalItems }} {{ $totalItems === 1 ? 'item' : 'items' }}</span>
                                 </p>
                             </div>
 
                             @if ($totalItems > 0)
                                 <span class="rounded-full bg-indigo-100 px-2.5 py-1 text-xs font-semibold text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
-                                    {{ $totalItems }}
+                                    <span x-text="totalItems">{{ $totalItems }}</span>
                                 </span>
                             @endif
+                        </div>
+
+                        <div class="mt-4 space-y-3">
+                            <form x-ref="form" method="POST" action="{{ route('cart.scan') }}" class="flex gap-2">
+                                @csrf
+                                <label for="cart-barcode" class="sr-only">Scan or enter a product barcode</label>
+                                <input
+                                    x-ref="barcode"
+                                    id="cart-barcode"
+                                    name="barcode"
+                                    type="text"
+                                    autocomplete="off"
+                                    placeholder="Scan barcode or enter SKU"
+                                    class="min-w-0 flex-1 rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                                >
+                                <button
+                                    type="submit"
+                                    class="shrink-0 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                >
+                                    Add
+                                </button>
+                            </form>
+                            <button
+                                type="button"
+                                x-show="!cameraOpen"
+                                @click="startCamera()"
+                                class="inline-flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
+                            >
+                                <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                    <path d="M6.5 3A1.5 1.5 0 0 0 5 4.5v.25H3.75A1.75 1.75 0 0 0 2 6.5v8.75C2 16.216 2.784 17 3.75 17h12.5A1.75 1.75 0 0 0 18 15.25V6.5a1.75 1.75 0 0 0-1.75-1.75H15V4.5A1.5 1.5 0 0 0 13.5 3h-7ZM10 7a4 4 0 1 1 0 8 4 4 0 0 1 0-8Zm0 1.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Z" />
+                                </svg>
+                                Scan with camera
+                            </button>
+                            <button
+                                type="button"
+                                x-cloak
+                                x-show="cameraOpen"
+                                @click="stopCamera()"
+                                class="text-sm font-medium text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100"
+                            >
+                                Stop camera
+                            </button>
+                            <video
+                                x-ref="video"
+                                x-cloak
+                                x-show="cameraOpen"
+                                autoplay
+                                muted
+                                playsinline
+                                class="w-full rounded-md bg-black"
+                            ></video>
+                            <p
+                                x-cloak
+                                x-show="scanStatus"
+                                x-text="scanStatus"
+                                :role="scanState === 'error' ? 'alert' : 'status'"
+                                aria-live="polite"
+                                class="rounded-md px-3 py-2 text-sm"
+                                :class="{
+                                    'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300': scanState === 'starting' || scanState === 'scanning',
+                                    'bg-amber-50 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300': scanState === 'not-found',
+                                    'bg-green-50 text-green-800 dark:bg-green-900/30 dark:text-green-300': scanState === 'detected',
+                                    'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300': scanState === 'error',
+                                    'bg-gray-50 text-gray-600 dark:bg-gray-700 dark:text-gray-300': scanState === 'idle'
+                                }"
+                            ></p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Use a barcode scanner or device camera. Product barcodes encode the SKU.</p>
                         </div>
                     </div>
 
@@ -306,7 +396,7 @@
                                             <div class="min-w-0">
                                                 <h4 class="truncate text-sm font-semibold text-gray-900 dark:text-gray-100">{{ $item['name'] }}</h4>
                                                 <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ $item['sku'] }}</p>
-                                                <p class="mt-1 text-sm font-medium text-gray-700 dark:text-gray-300">${{ number_format($item['price'], 2) }}</p>
+                                                <p class="mt-1 text-sm font-medium text-gray-700 dark:text-gray-300">₱{{ number_format($item['price'], 2) }}</p>
                                             </div>
 
                                             {{-- Remove --}}
@@ -332,16 +422,25 @@
                                                     <button type="submit" class="px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">−</button>
                                                 </form>
 
-                                                <span class="px-3 py-1 text-sm font-medium text-gray-800 dark:text-gray-200">{{ $item['quantity'] }}</span>
+                                                <span class="px-3 py-1 text-sm font-medium text-gray-800 dark:text-gray-200" x-text="items[{{ $item['id'] }}]?.quantity ?? {{ $item['quantity'] }}">{{ $item['quantity'] }}</span>
 
-                                                <form method="POST" action="{{ route('cart.add', $item['id']) }}">
+                                                <form
+                                                    method="POST"
+                                                    action="{{ route('cart.add', $item['id']) }}"
+                                                    @submit.prevent="addItem($event, {{ $item['id'] }})"
+                                                >
                                                     @csrf
-                                                    <button type="submit" class="px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">+</button>
+                                                    <button
+                                                        type="submit"
+                                                        :disabled="processing[{{ $item['id'] }}]"
+                                                        class="px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 disabled:cursor-wait disabled:opacity-50 dark:text-gray-300 dark:hover:bg-gray-700"
+                                                        aria-label="Increase {{ $item['name'] }} quantity"
+                                                    >+</button>
                                                 </form>
                                             </div>
 
                                             <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                                ${{ number_format($item['price'] * $item['quantity'], 2) }}
+                                                <span x-text="itemTotal({{ $item['id'] }})">₱{{ number_format($item['price'] * $item['quantity'], 2) }}</span>
                                             </span>
                                         </div>
                                     </div>
@@ -352,14 +451,25 @@
 
                     {{-- Totals + Payment --}}
                     <div class="space-y-3 pt-4">
+                        <p
+                            x-cloak
+                            x-show="message && messageIsError"
+                            x-text="message"
+                            role="alert"
+                            aria-live="polite"
+                            class="rounded-md px-3 py-2 text-sm"
+                            :class="messageIsError
+                                ? 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                                : 'bg-green-50 text-green-800 dark:bg-green-900/30 dark:text-green-300'"
+                        ></p>
                         <div class="flex justify-between text-sm text-gray-600 dark:text-gray-300">
                             <span>Subtotal</span>
-                            <span>${{ number_format($subtotal, 2) }}</span>
+                            <span x-text="`₱${subtotal.toFixed(2)}`">₱{{ number_format($subtotal, 2) }}</span>
                         </div>
 
                         <div class="flex justify-between border-t border-gray-200 pt-3 font-semibold text-gray-900 dark:border-gray-700 dark:text-gray-100">
                             <span>Total</span>
-                            <span>${{ number_format($subtotal, 2) }}</span>
+                            <span x-text="`₱${subtotal.toFixed(2)}`">₱{{ number_format($subtotal, 2) }}</span>
                         </div>
 
                         <form
@@ -384,8 +494,17 @@
                                     this.$watch('method', (value) => {
                                         this.paid = value !== 'cash' ? this.total.toFixed(2) : '';
                                     });
+                                    this.$watch('total', (value) => {
+                                        if (this.method !== 'cash') {
+                                            this.paid = value.toFixed(2);
+                                        }
+                                    });
+                                },
+                                syncTotal(value) {
+                                    this.total = value;
                                 }
                             }"
+                            @cart-updated.window="syncTotal($event.detail.total)"
                         >
                             @csrf
 
@@ -437,7 +556,7 @@
                             {{-- Change --}}
                             <div class="flex justify-between rounded-md bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-900 dark:bg-gray-700 dark:text-gray-100">
                                 <span>Change</span>
-                                <span x-text="'$' + change.toFixed(2)">$0.00</span>
+                                <span x-text="'₱' + change.toFixed(2)">₱0.00</span>
                             </div>
 
                             <button
@@ -508,6 +627,28 @@
                                 <div>
                                     <label for="sku" class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">SKU</label>
                                     <input id="sku" name="sku" type="text" x-bind:value="editing ? sku : 'Generated automatically when saved'" readonly class="block w-full rounded-md border-gray-300 bg-gray-50 text-gray-500 shadow-sm dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                                </div>
+
+                                <div
+                                    x-cloak
+                                    x-show="editing"
+                                    x-effect="if (modalOpen && editing && barcodeValue) renderDataMatrix($refs.productDataMatrix, barcodeValue)"
+                                    class="rounded-md border border-gray-200 p-4 text-center dark:border-gray-700"
+                                >
+                                    <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Product Data Matrix</p>
+                                    <canvas
+                                        x-ref="productDataMatrix"
+                                        role="img"
+                                        :aria-label="`Data Matrix code for ${name}`"
+                                        class="mx-auto mt-3 max-w-full"
+                                    ></canvas>
+                                    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400" x-text="barcodeValue"></p>
+                                    <p
+                                        x-show="dataMatrixError"
+                                        x-text="dataMatrixError"
+                                        role="alert"
+                                        class="mt-2 text-sm text-red-600"
+                                    ></p>
                                 </div>
 
                                 <div class="grid grid-cols-2 gap-4">
