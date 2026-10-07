@@ -95,17 +95,39 @@
 
                 {{-- TOTAL --}}
                 <div class="mt-2 flex justify-between text-xs font-bold">
-
                     <span>
                         TOTAL
                     </span>
-
                     <span>
                         ${{ number_format($data['total'], 2) }}
                     </span>
-
                 </div>
 
+                {{-- PAYMENT DETAILS --}}
+                <div class="mt-3 space-y-1 text-[10px]">
+
+                    <div class="flex justify-between">
+                        <span>Payment Method</span>
+                        <span class="font-semibold">
+                            {{ ucfirst(str_replace('_', ' ', $data['payment_method'])) }}
+                        </span>
+                    </div>
+
+                    <div class="flex justify-between">
+                        <span>Amount Paid</span>
+                        <span>
+                            ${{ number_format($data['amount_paid'], 2) }}
+                        </span>
+                    </div>
+
+                    <div class="flex justify-between font-bold">
+                        <span>Change</span>
+                        <span>
+                            ${{ number_format($data['change'], 2) }}
+                        </span>
+                    </div>
+
+                </div>
 
                 {{-- FOOTER --}}
                 <div class="mt-4 border-t border-dashed border-black pt-3 text-center">
