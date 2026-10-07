@@ -1,10 +1,5 @@
 <x-app-layout>
 
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200">
-            Receipt
-        </h2>
-    </x-slot>
 
     <div class="py-8">
 
@@ -13,7 +8,7 @@
 
             <div
                 id="receipt"
-                class="receipt-paper w-[80mm] bg-white text-black shadow-lg"
+                class="receipt-paper w-[80mm] bg-white text-black shadow-lg rounded-lg"
                 style="padding: 20px;"
             >
 
