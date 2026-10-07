@@ -1,5 +1,5 @@
 <img
-    src="https://cdn-icons-png.flaticon.com/512/4990/4990622.png"
+    src="{{ asset('favicon.png') }}"
     alt="Application logo"
     {{ $attributes->merge(['class' => 'object-contain']) }}
 >
