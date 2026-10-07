@@ -1,12 +1,23 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-            {{ __('Analytics') }}
-        </h2>
-    </x-slot>
+
 
     @php
-        $maxDailyRevenue = max(1, (float) $salesByDay->max('revenue'));
+        $chartLeft = 88;
+        $chartRight = 742;
+        $chartTop = 24;
+        $chartBottom = 250;
+        $chartMaxRevenue = max(1, (float) $salesByDay->max('revenue'));
+        $chartPoints = $salesByDay->values()->map(function (array $day, int $index) use ($chartLeft, $chartRight, $chartTop, $chartBottom, $chartMaxRevenue): array {
+            $x = $chartLeft + ($index * ($chartRight - $chartLeft) / 6);
+            $y = $chartBottom - (($day['revenue'] / $chartMaxRevenue) * ($chartBottom - $chartTop));
+
+            return [
+                'x' => number_format($x, 2, '.', ''),
+                'y' => number_format($y, 2, '.', ''),
+                'day' => $day,
+            ];
+        });
+        $chartLine = $chartPoints->map(fn (array $point): string => $point['x'].','.$point['y'])->implode(' ');
     @endphp
 
     <div class="py-8">
@@ -41,29 +52,43 @@
                         <h3 id="daily-sales-heading" class="text-base font-semibold text-gray-900 dark:text-gray-100">{{ __('Daily revenue') }}</h3>
                         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ __('Last 7 days') }}</p>
                     </div>
-                    <div class="space-y-4">
-                        @foreach ($salesByDay as $day)
-                            <div>
-                                <div class="mb-1 flex items-center justify-between gap-3 text-sm">
-                                    <span class="w-20 shrink-0 text-gray-600 dark:text-gray-300">{{ $day['label'] }}, {{ $day['date'] }}</span>
-                                    <span class="truncate text-xs text-gray-500 dark:text-gray-400">
-                                        {{ $day['transaction_count'] }} {{ __('sales') }}
-                                    </span>
-                                    <span class="shrink-0 font-medium text-gray-900 dark:text-gray-100">₱{{ number_format($day['revenue'], 2) }}</span>
-                                </div>
-                                <div class="h-2 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
-                                    <div
-                                        class="h-full rounded-full bg-indigo-600"
-                                        style="width: {{ min(100, ($day['revenue'] / $maxDailyRevenue) * 100) }}%"
-                                        role="progressbar"
-                                        aria-label="{{ __('Revenue for') }} {{ $day['date'] }}"
-                                        aria-valuenow="{{ $day['revenue'] }}"
-                                        aria-valuemin="0"
-                                        aria-valuemax="{{ $maxDailyRevenue }}"
-                                    ></div>
-                                </div>
-                            </div>
-                        @endforeach
+                    <div class="w-full overflow-x-auto">
+                        <svg
+                            viewBox="0 0 760 315"
+                            class="h-auto w-full min-w-[540px]"
+                            role="img"
+                            aria-labelledby="daily-revenue-chart-title daily-revenue-chart-description"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <title id="daily-revenue-chart-title">{{ __('Daily revenue over the last 7 days') }}</title>
+                            <desc id="daily-revenue-chart-description">{{ __('Line chart with dates on the horizontal axis and revenue in Philippine pesos on the vertical axis.') }}</desc>
+
+                            @foreach (range(0, 4) as $tickIndex)
+                                @php
+                                    $tickValue = $chartMaxRevenue * (4 - $tickIndex) / 4;
+                                    $tickY = $chartTop + ($tickIndex * ($chartBottom - $chartTop) / 4);
+                                @endphp
+                                <line x1="{{ $chartLeft }}" y1="{{ $tickY }}" x2="{{ $chartRight }}" y2="{{ $tickY }}" stroke="#37323d" stroke-width="1" />
+                                <text x="{{ $chartLeft - 12 }}" y="{{ $tickY + 4 }}" fill="#a6a1ad" font-size="12" text-anchor="end">₱{{ number_format($tickValue, 2) }}</text>
+                            @endforeach
+
+                            <polyline
+                                points="{{ $chartLine }}"
+                                fill="none"
+                                stroke="#a855f7"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="3"
+                            />
+
+                            @foreach ($chartPoints as $point)
+                                <circle cx="{{ $point['x'] }}" cy="{{ $point['y'] }}" r="5" fill="#d8b4fe" stroke="#111014" stroke-width="2">
+                                    <title>{{ $point['day']['label'] }}, {{ $point['day']['date'] }}: ₱{{ number_format($point['day']['revenue'], 2) }} ({{ $point['day']['transaction_count'] }} {{ __('sales') }})</title>
+                                </circle>
+                                <text x="{{ $point['x'] }}" y="276" fill="#c8c2cf" font-size="12" text-anchor="middle">{{ $point['day']['label'] }}</text>
+                                <text x="{{ $point['x'] }}" y="296" fill="#a6a1ad" font-size="11" text-anchor="middle">{{ $point['day']['date'] }}</text>
+                            @endforeach
+                        </svg>
                     </div>
                 </article>
 
@@ -75,7 +100,7 @@
                     @forelse ($paymentMethods as $paymentMethod)
                         <div class="flex items-center justify-between gap-4 border-b border-gray-100 py-3 last:border-0 dark:border-gray-700">
                             <div>
-                                <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ ucfirst(str_replace('_', ' ', $paymentMethod->payment_method)) }}</p>
+                                <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $paymentMethod->payment_method === 'gcash' ? 'GCash' : ucfirst(str_replace('_', ' ', $paymentMethod->payment_method)) }}</p>
                                 <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ $paymentMethod->transaction_count }} {{ __('transactions') }}</p>
                             </div>
                             <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">₱{{ number_format((float) $paymentMethod->revenue, 2) }}</p>
