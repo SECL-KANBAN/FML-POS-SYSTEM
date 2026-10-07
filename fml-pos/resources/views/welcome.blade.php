@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#08070b">
     <title>{{ config('app.name', 'FML POS') }}</title>
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
     <style>
         :root {
             color-scheme: dark;
@@ -92,10 +93,6 @@
             width: 36px;
             height: 36px;
             place-items: center;
-            border: 1px solid rgb(216 180 254 / 35%);
-            border-radius: 11px;
-            background: linear-gradient(145deg, #a855f7, #6b21a8);
-            box-shadow: 0 5px 20px rgb(147 51 234 / 25%);
         }
 
         .brand-mark svg {
@@ -208,6 +205,9 @@
                 transition-duration: .01ms !important;
             }
         }
+        #fml-logo{
+            height: 40px;
+        }
     </style>
 </head>
 <body>
@@ -220,13 +220,11 @@
             <div class="auth-content">
                 <a class="brand" href="{{ url('/') }}" aria-label="{{ config('app.name', 'FML POS') }} home">
                     <span class="brand-mark" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none">
-                            <path d="M4 5.5h16v13H4zM8 9v6m0-6h4m-4 3h3m3 3v-6l2 3 2-3v6" stroke="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7"/>
-                        </svg>
+                        <img src="{{ asset('favicon.png') }}" alt="FML POS logo" id="fml-logo"/>
                     </span>
                     {{ config('app.name', 'FML POS') }}
                 </a>
-
+    
                 @auth
                     <h1 id="welcome-heading">Welcome back.</h1>
                     <p class="intro">Continue to your point of sale dashboard.</p>
