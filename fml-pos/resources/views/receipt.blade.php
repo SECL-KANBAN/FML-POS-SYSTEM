@@ -8,7 +8,7 @@
 
             <div
                 id="receipt"
-                class="receipt-paper w-[80mm] bg-white text-black shadow-lg rounded-lg"
+                class="receipt-paper w-[3in] bg-white text-black shadow-lg rounded-lg"
                 style="padding: 20px;"
             >
 
@@ -143,7 +143,7 @@
 
 
 {{-- BUTTONS --}}
-<div class="mx-auto mt-6 flex w-[80mm] max-w-full justify-center gap-2 px-4">
+<div class="mx-auto mt-6 flex w-[3in] max-w-full justify-center gap-2 px-4">
 
     {{-- PDF Button --}}
     <a
@@ -188,7 +188,7 @@
         @media print {
 
             @page {
-                size: 80mm auto;
+                size: 3in 5in;
                 margin: 0;
             }
 
@@ -212,7 +212,8 @@
                 left: 0;
                 top: 0;
 
-                width: 80mm !important;
+                width: 3in !important;
+                box-sizing: border-box;
 
                 margin: 0 !important;
 
