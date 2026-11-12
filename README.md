@@ -33,13 +33,12 @@ A web-based point-of-sale application for managing products, processing sales, a
 Run the following commands from the repository root:
 
 ```bash
-cd fml-pos
 composer install
 cp .env.example .env
 php -r "file_exists('database/database.sqlite') || touch('database/database.sqlite');"
 php artisan key:generate
 php artisan migrate
-npm install
+npm ci
 npm run build
 php artisan storage:link
 ```
@@ -58,16 +57,54 @@ Camera scanning requires a browser that supports camera access and a secure cont
 
 ## Tests
 
-Run the Laravel test suite from the `fml-pos` directory:
+Run the Laravel test suite from the repository root:
 
 ```bash
 php artisan test
 ```
 
+## Deploy to Vercel
+
+This repository includes a [FrankenPHP](https://frankenphp.dev/) container definition for Vercel's [Container Runtime](https://vercel.com/docs/functions/runtimes/container), currently in Beta. Vercel selects the container preset from `Dockerfile.vercel`; the image builds the frontend assets and serves Laravel through Caddy.
+
+1. Push the repository to GitHub and import it into Vercel. Keep the project root set to the repository root.
+2. Create a managed PostgreSQL or MySQL database. Vercel containers are ephemeral, so do not use the default SQLite database for production.
+3. Add these environment variables in **Vercel → Project Settings → Environment Variables**:
+
+   | Variable | Value |
+   | --- | --- |
+   | `APP_ENV` | `production` |
+   | `APP_DEBUG` | `false` |
+   | `APP_KEY` | Generate with `php artisan key:generate --show`; keep the same key across deployments |
+   | `APP_URL` | Your production HTTPS URL |
+   | `DB_CONNECTION` | `pgsql` or `mysql`, matching your database |
+   | `DB_URL` or `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` | Credentials for the managed database |
+   | `SESSION_DRIVER` | `database` |
+   | `CACHE_STORE` | `database` |
+   | `QUEUE_CONNECTION` | `sync` unless you have separately configured a persistent queue worker |
+   | `MAIL_*` | Production mail provider settings, required for account verification emails |
+
+   Set any additional TLS or connection options required by your database provider. Do not put production secrets in the repository or Docker image.
+4. Run `php artisan migrate --force` once against the production database from a secure runner configured with those same database credentials. Run new migrations as part of your release process; the web container does not migrate the database on startup.
+5. Deploy from the Vercel CLI:
+
+   ```bash
+   vercel login
+   vercel link
+   vercel deploy --prod
+   ```
+
+The app currently stores product images on Laravel's local `public` disk. Files written to a Vercel container are not durable or shared between instances. Before using product-image uploads in production, move that disk to persistent object storage and install/configure the matching Laravel filesystem adapter. Camera scanning works on the deployed HTTPS domain when the user grants camera permission.
+
+You can test the image locally with Docker:
+
+```bash
+docker build -f Dockerfile.vercel -t fml-pos .
+```
+
 ## Project layout
 
 ```text
-fml-pos/
 ├── app/                 # Application models and controllers
 ├── database/            # Migrations, factories, and seeders
 ├── resources/
