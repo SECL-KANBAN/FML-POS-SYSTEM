@@ -82,7 +82,7 @@ This repository includes a [FrankenPHP](https://frankenphp.dev/) container defin
    | `APP_KEY` | Generate with `php artisan key:generate --show`; keep the same key across deployments |
    | `APP_URL` | Your production HTTPS URL |
    | `DB_CONNECTION` | `pgsql` or `mysql`, matching your database |
-   | `DB_URL` or `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` | Credentials for the managed database |
+   | `DB_URL` or `DATABASE_URL`, or `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` | Credentials for the managed database; Vercel's Neon integration supplies `DATABASE_URL` |
    | `SESSION_DRIVER` | `database` |
    | `CACHE_STORE` | `database` |
    | `QUEUE_CONNECTION` | `sync` unless you have separately configured a persistent queue worker |
