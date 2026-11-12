@@ -1,4 +1,4 @@
-# FML POS System
+# F.M.L POS System
 
 A web-based point-of-sale application for managing products, processing sales, and reviewing store performance. The system includes a barcode-scanning checkout flow, stock tracking, and downloadable PDF receipts.
 
