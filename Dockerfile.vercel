@@ -13,11 +13,12 @@ FROM dunglas/frankenphp:1-php8.3-alpine AS base
 
 WORKDIR /app
 
-RUN install-php-extensions dom gd intl mbstring opcache pdo_mysql pdo_pgsql zip
+RUN install-php-extensions curl dom gd intl mbstring opcache pdo_mysql pdo_pgsql zip
 
 ENV APP_ENV=production \
     APP_DEBUG=false \
     LOG_CHANNEL=stderr \
+    PRODUCT_IMAGE_STORAGE=vercel_blob \
     PORT=80
 
 FROM base AS build

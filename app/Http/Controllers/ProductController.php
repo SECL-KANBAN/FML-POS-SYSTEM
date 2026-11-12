@@ -3,16 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Services\ProductImageStorage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\ValidationException;
 use Throwable;
 
 class ProductController extends Controller
 {
+    public function __construct(private readonly ProductImageStorage $imageStorage) {}
+
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
@@ -90,19 +92,13 @@ class ProductController extends Controller
 
     private function storePicture(Request $request): ?string
     {
-        if (! $request->hasFile('picture')) {
+        $picture = $request->file('picture');
+
+        if (! $picture instanceof UploadedFile) {
             return null;
         }
 
-        $path = $request->file('picture')->store('products', 'public');
-
-        if ($path === false) {
-            throw ValidationException::withMessages([
-                'picture' => 'The product picture could not be saved. Please try again.',
-            ]);
-        }
-
-        return $path;
+        return $this->imageStorage->store($picture);
     }
 
     private function deletePicture(?string $path): void
@@ -111,7 +107,7 @@ class ProductController extends Controller
             return;
         }
 
-        if (! Storage::disk('public')->delete($path)) {
+        if (! $this->imageStorage->delete($path)) {
             Log::warning('Unable to delete a product picture from public storage.', ['path' => $path]);
         }
     }

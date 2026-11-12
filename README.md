@@ -1,3 +1,6 @@
+
+![cover](cover.png)
+
 # F.M.L POS System
 
 A web-based point-of-sale application for managing products, processing sales, and reviewing store performance. The system includes a barcode-scanning checkout flow, stock tracking, and downloadable PDF receipts.
@@ -69,7 +72,8 @@ This repository includes a [FrankenPHP](https://frankenphp.dev/) container defin
 
 1. Push the repository to GitHub and import it into Vercel. Keep the project root set to the repository root.
 2. Create a managed PostgreSQL or MySQL database. Vercel containers are ephemeral, so do not use the default SQLite database for production.
-3. Add these environment variables in **Vercel → Project Settings → Environment Variables**:
+3. Create a **public** Blob store in your Vercel project's **Storage** tab, connect it to the project, and enable its `BLOB_READ_WRITE_TOKEN` environment variable.
+4. Add these environment variables in **Vercel → Project Settings → Environment Variables**:
 
    | Variable | Value |
    | --- | --- |
@@ -83,10 +87,12 @@ This repository includes a [FrankenPHP](https://frankenphp.dev/) container defin
    | `CACHE_STORE` | `database` |
    | `QUEUE_CONNECTION` | `sync` unless you have separately configured a persistent queue worker |
    | `MAIL_*` | Production mail provider settings, required for account verification emails |
+   | `PRODUCT_IMAGE_STORAGE` | `vercel_blob` |
+   | `BLOB_READ_WRITE_TOKEN` | Read-write token from your Vercel Blob store |
 
    Set any additional TLS or connection options required by your database provider. Do not put production secrets in the repository or Docker image.
-4. Run `php artisan migrate --force` once against the production database from a secure runner configured with those same database credentials. Run new migrations as part of your release process; the web container does not migrate the database on startup.
-5. Deploy from the Vercel CLI:
+5. Run `php artisan migrate --force` once against the production database from a secure runner configured with those same database credentials. Run new migrations as part of your release process; the web container does not migrate the database on startup.
+6. Deploy from the Vercel CLI:
 
    ```bash
    vercel login
@@ -94,7 +100,7 @@ This repository includes a [FrankenPHP](https://frankenphp.dev/) container defin
    vercel deploy --prod
    ```
 
-The app currently stores product images on Laravel's local `public` disk. Files written to a Vercel container are not durable or shared between instances. Before using product-image uploads in production, move that disk to persistent object storage and install/configure the matching Laravel filesystem adapter. Camera scanning works on the deployed HTTPS domain when the user grants camera permission.
+The container defaults `PRODUCT_IMAGE_STORAGE` to `vercel_blob`; local development defaults to `local`. Existing image paths saved on local storage are not migrated automatically; re-upload those images or migrate them before switching production traffic. Camera scanning works on the deployed HTTPS domain when the user grants camera permission.
 
 You can test the image locally with Docker:
 

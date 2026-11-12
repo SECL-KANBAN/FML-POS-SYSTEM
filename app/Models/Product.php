@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class Product extends Model
 {
@@ -21,5 +23,23 @@ class Product extends Model
             'stock' => 'integer',
             'is_available' => 'boolean',
         ];
+    }
+
+    public function getImageUrlAttribute(): ?string
+    {
+        return self::imageUrlFor($this->image_path);
+    }
+
+    public static function imageUrlFor(?string $imagePath): ?string
+    {
+        if ($imagePath === null || $imagePath === '') {
+            return null;
+        }
+
+        if (Str::startsWith($imagePath, ['http://', 'https://'])) {
+            return $imagePath;
+        }
+
+        return Storage::disk('public')->url($imagePath);
     }
 }

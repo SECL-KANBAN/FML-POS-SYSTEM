@@ -167,7 +167,7 @@
                                     <div class="flex gap-3 p-3">
                                         @if ($product->image_path)
                                             <img
-                                                src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($product->image_path) }}"
+                                                src="{{ $product->image_url }}"
                                                 alt="{{ $product->name }}"
                                                 class="h-20 w-20 shrink-0 rounded-md object-cover"
                                             >
@@ -212,7 +212,7 @@
                                                 price: @js($product->price),
                                                 stock: @js($product->stock),
                                                 isAvailable: @js($product->is_available),
-                                                imageUrl: @js($product->image_path ? \Illuminate\Support\Facades\Storage::disk('public')->url($product->image_path) : null)
+                                                imageUrl: @js($product->image_url)
                                             })"
                                             class="rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-indigo-400"
                                         >
@@ -374,7 +374,7 @@
                                     {{-- Product image --}}
                                     @if ($item['image'])
                                         <img
-                                            src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($item['image']) }}"
+                                            src="{{ \App\Models\Product::imageUrlFor($item['image']) }}"
                                             alt="{{ $item['name'] }}"
                                             class="h-16 w-16 shrink-0 rounded-md object-cover"
                                         >

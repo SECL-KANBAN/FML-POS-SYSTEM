@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 
 class CartController extends Controller
 {
@@ -33,14 +33,14 @@ class CartController extends Controller
                 'name' => $product->name,
                 'sku' => $product->sku,
                 'price' => $product->price,
-                'image' => $product->image_path,
+                'image' => $product->image_url,
                 'quantity' => 1,
             ];
         }
 
         session()->put('cart', $cart);
 
-        return $this->addResponse($request, $product, $product->name . ' added to cart.');
+        return $this->addResponse($request, $product, $product->name.' added to cart.');
     }
 
     public function scan(Request $request)
